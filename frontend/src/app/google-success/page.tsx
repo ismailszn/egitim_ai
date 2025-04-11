@@ -17,11 +17,11 @@ export default function GoogleSuccessPage() {
       alert("Token alınamadı.");
       router.push("/login");
     }
-  }, []);
+  }, [router]); // 🔁 router dependency eklendi
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <p>Yönlendiriliyorsunuz...</p>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <p className="text-xl text-gray-700">Yönlendiriliyorsunuz...</p>
     </div>
   );
 }

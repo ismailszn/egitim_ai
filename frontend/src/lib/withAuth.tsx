@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function withAuth(Component: React.ComponentType) {
-  return function ProtectedComponent(props: any) {
+export default function withAuth<P>(Component: React.ComponentType<P>) {
+  return function ProtectedComponent(props: P) {
     const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
