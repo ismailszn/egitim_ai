@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function withAuth(Component: React.FC) {
+export default function withAuth(Component: React.ComponentType) {
   return function ProtectedComponent(props: any) {
     const router = useRouter();
     const [isAuthorized, setIsAuthorized] = useState(false);
@@ -17,7 +17,7 @@ export default function withAuth(Component: React.FC) {
         setIsAuthorized(true);
       }
       setIsLoading(false);
-    }, []);
+    }, [router]);
 
     if (isLoading) {
       return <div className="min-h-screen flex items-center justify-center">Yükleniyor...</div>;
