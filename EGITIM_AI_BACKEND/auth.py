@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jwt import PyJWTError
 import jwt
 import os
 from dotenv import load_dotenv
@@ -25,7 +27,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
 class UserRegister(BaseModel):
     email: EmailStr
     password: str
-    name: str  # ✅ Ad alanı eklendi
+    name: str
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -34,6 +36,20 @@ class UserLogin(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+# -------------------------------
+# TOKEN DOĞRULAMA MIDDLEWARE
+# -------------------------------
+
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except PyJWTError:
+        raise HTTPException(status_code=401, detail="Geçersiz token")
 
 # -------------------------------
 # KAYIT – MongoDB’ye Kayıt
@@ -49,7 +65,7 @@ async def register(user: UserRegister):
     user_dict = {
         "email": user.email,
         "hashed_password": hashed_pw,
-        "name": user.name  # ✅ Adı veritabanına kaydet
+        "name": user.name
     }
     await users_collection.insert_one(user_dict)
 
@@ -70,11 +86,22 @@ async def login(user: UserLogin):
 
     token_data = {
         "sub": user.email,
-        "name": user_record.get("name", "Kullanıcı")  # ✅ Ad bilgisi token'a ekleniyor
+        "name": user_record.get("name", "Kullanıcı")
     }
     access_token = create_access_token(token_data)
 
     return {"access_token": access_token}
+
+# -------------------------------
+# KULLANICIYI GETİR – Koruma altında
+# -------------------------------
+
+@router.get("/me")
+async def get_me(user_data: dict = Depends(get_current_user)):
+    return {
+        "email": user_data.get("sub"),
+        "name": user_data.get("name")
+    }
 
 # -------------------------------
 # JWT Token Oluştur
