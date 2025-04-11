@@ -25,7 +25,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
 class UserRegister(BaseModel):
     email: EmailStr
     password: str
-    name: str  # ✅ yeni alan
+    name: str  # ✅ Ad alanı eklendi
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -49,7 +49,7 @@ async def register(user: UserRegister):
     user_dict = {
         "email": user.email,
         "hashed_password": hashed_pw,
-        "name": user.name  # ✅ adı da kaydet
+        "name": user.name  # ✅ Adı veritabanına kaydet
     }
     await users_collection.insert_one(user_dict)
 
@@ -70,7 +70,7 @@ async def login(user: UserLogin):
 
     token_data = {
         "sub": user.email,
-        "name": user_record.get("name", "Kullanıcı")  # ✅ ad bilgisi token'a eklendi
+        "name": user_record.get("name", "Kullanıcı")  # ✅ Ad bilgisi token'a ekleniyor
     }
     access_token = create_access_token(token_data)
 

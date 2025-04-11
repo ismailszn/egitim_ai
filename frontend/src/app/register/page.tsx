@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const [name, setName] = useState(""); // yeni isim alanı
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,19 +18,19 @@ export default function RegisterPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        alert("Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz.");
+        alert("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
         router.push("/login");
       } else {
         alert("Kayıt başarısız: " + data.detail);
       }
     } catch (err) {
-      alert("Sunucuya ulaşılamıyor." + err);
+      alert("Sunucuya ulaşılamadı.");
     }
   };
 
@@ -40,6 +41,15 @@ export default function RegisterPage() {
         className="bg-white p-8 rounded shadow-md w-full max-w-md"
       >
         <h1 className="text-2xl font-bold mb-6 text-center">Kayıt Ol</h1>
+
+        <input
+          type="text"
+          placeholder="Adınız Soyadınız"
+          className="w-full p-2 border border-gray-300 rounded mb-4"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
 
         <input
           type="email"
@@ -66,7 +76,7 @@ export default function RegisterPage() {
           Kayıt Ol
         </button>
 
-        <p className="mt-4 text-center text-sm">
+        <p className="text-center mt-4 text-sm text-gray-600">
           Zaten bir hesabın var mı?{" "}
           <a href="/login" className="text-blue-600 hover:underline">
             Giriş Yap
