@@ -29,7 +29,7 @@ export default function RegisterPage() {
       } else {
         alert("Kayıt başarısız: " + data.detail);
       }
-    } catch (err) {
+    } catch {
       alert("Sunucuya ulaşılamadı.");
     }
   };
