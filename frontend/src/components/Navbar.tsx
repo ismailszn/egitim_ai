@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -15,30 +13,42 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   return (
-    <nav className="flex justify-between items-center bg-gray-100 px-6 py-4 shadow-sm">
-      <Link href="/">
-        <h1 className="text-xl font-bold text-gray-800">egitim-ai</h1>
+    <nav className="bg-white shadow px-4 py-3 flex justify-between items-center">
+      <Link href="/" className="text-xl font-bold text-gray-800">
+        egitim-ai
       </Link>
 
-      <div className="flex items-center gap-4">
-        {isLoggedIn && (
+      <div className="flex gap-4 items-center">
+        {isLoggedIn ? (
           <>
-            <Link href="/profile" className="text-gray-700 hover:underline">
+            <Link href="/dashboard" className="text-gray-700 hover:text-black">
+              Dashboard
+            </Link>
+            <Link href="/profile" className="text-gray-700 hover:text-black">
               Profil
             </Link>
-            <Link href="/user" className="text-gray-700 hover:underline">
+            <Link href="/user" className="text-gray-700 hover:text-black">
               Kullanıcı Bilgileri
             </Link>
             <button
               onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+              className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600"
             >
-              Çıkış Yap
+              Çıkış
             </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="text-gray-700 hover:text-black">
+              Giriş Yap
+            </Link>
+            <Link href="/register" className="text-gray-700 hover:text-black">
+              Kayıt Ol
+            </Link>
           </>
         )}
       </div>
