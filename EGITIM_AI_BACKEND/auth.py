@@ -25,6 +25,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
 class UserRegister(BaseModel):
     email: EmailStr
     password: str
+    name: str  # ✅ yeni alan
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -45,7 +46,11 @@ async def register(user: UserRegister):
         raise HTTPException(status_code=400, detail="Bu e-posta zaten kayıtlı.")
     
     hashed_pw = pwd_context.hash(user.password)
-    user_dict = {"email": user.email, "hashed_password": hashed_pw}
+    user_dict = {
+        "email": user.email,
+        "hashed_password": hashed_pw,
+        "name": user.name  # ✅ adı da kaydet
+    }
     await users_collection.insert_one(user_dict)
 
     return {"message": "Kayıt başarılı."}
@@ -63,7 +68,10 @@ async def login(user: UserLogin):
     if not pwd_context.verify(user.password, user_record["hashed_password"]):
         raise HTTPException(status_code=400, detail="Şifre hatalı.")
 
-    token_data = {"sub": user.email}
+    token_data = {
+        "sub": user.email,
+        "name": user_record.get("name", "Kullanıcı")  # ✅ ad bilgisi token'a eklendi
+    }
     access_token = create_access_token(token_data)
 
     return {"access_token": access_token}
