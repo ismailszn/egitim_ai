@@ -1,35 +1,36 @@
 "use client";
 
+import withAuth from "@/lib/withAuth";
 import { useEffect, useState } from "react";
-import fetchWithAuth from "@/lib/fetchWithAuth";
 
-type UserData = {
-  email: string;
-  name: string;
-};
-
-export default function UserPage() {
-  const [user, setUser] = useState<UserData | null>(null);
+function UserPage() {
+  const [user, setUser] = useState<{ email: string; name?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getUser = async () => {
-      const data = await fetchWithAuth<UserData>("/auth/me");
-      setUser(data);
-    };
-    getUser();
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setUser(payload);
+    }
+    setLoading(false);
   }, []);
+
+  if (loading) {
+    return <div className="p-10 text-center">Yükleniyor veya giriş yapılmamış.</div>;
+  }
 
   return (
     <div className="p-10 text-center">
       <h1 className="text-3xl font-bold">Kullanıcı Bilgileri</h1>
-      {user ? (
-        <div className="mt-4 text-gray-700">
-          <p>Ad: {user.name}</p>
-          <p>Email: {user.email}</p>
-        </div>
-      ) : (
-        <p className="mt-4 text-gray-500">Yükleniyor veya giriş yapılmamış.</p>
-      )}
+      <p className="mt-4 text-gray-600">
+        <strong>Ad:</strong> {user?.name || "—"}
+      </p>
+      <p className="mt-2 text-gray-600">
+        <strong>Email:</strong> {user?.email || "—"}
+      </p>
     </div>
   );
 }
+
+export default withAuth(UserPage);
