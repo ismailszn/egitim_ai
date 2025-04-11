@@ -1,30 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import withAuth from "../../lib/withAuth";
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [authorized, setAuthorized] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      router.replace("/login"); // yönlendirme
-    } else {
-      setAuthorized(true); // sadece token varsa içerik göster
-    }
-  }, [router]);
-
-  if (!authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Yükleniyor...</p>
-      </div>
-    );
-  }
-
+function DashboardPage() {
   return (
     <div className="p-10 text-center">
       <h1 className="text-3xl font-bold">Dashboard&apos;a hoş geldin 🎉</h1>
@@ -32,3 +10,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+export default withAuth(DashboardPage);
