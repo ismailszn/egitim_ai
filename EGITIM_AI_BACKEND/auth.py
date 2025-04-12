@@ -1,9 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jwt import PyJWTError
 import jwt
 import os
 from dotenv import load_dotenv
@@ -19,6 +18,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 # -------------------------------
 # ŞEMA TANIMLARI
@@ -36,20 +37,6 @@ class UserLogin(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-
-# -------------------------------
-# TOKEN DOĞRULAMA MIDDLEWARE
-# -------------------------------
-
-security = HTTPBearer()
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except PyJWTError:
-        raise HTTPException(status_code=401, detail="Geçersiz token")
 
 # -------------------------------
 # KAYIT – MongoDB’ye Kayıt
@@ -93,15 +80,27 @@ async def login(user: UserLogin):
     return {"access_token": access_token}
 
 # -------------------------------
-# KULLANICIYI GETİR – Koruma altında
+# /auth/me → Token ile giriş yapan kullanıcı bilgilerini döner
 # -------------------------------
 
 @router.get("/me")
-async def get_me(user_data: dict = Depends(get_current_user)):
-    return {
-        "email": user_data.get("sub"),
-        "name": user_data.get("name")
-    }
+async def get_me(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Geçersiz token.")
+        
+        user = await users_collection.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı.")
+        
+        return {
+            "email": user["email"],
+            "name": user.get("name", "Kullanıcı")
+        }
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Token doğrulama başarısız.")
 
 # -------------------------------
 # JWT Token Oluştur
